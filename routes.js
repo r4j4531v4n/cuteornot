@@ -9,15 +9,15 @@ var url = require("url");
 
 module.exports = function(app) {
 
-    // Homepage
+    // homepage
     app.get('/', function(req, res) {
 
-        // Find all photos
+        // find all photos
         photos.find({type: "pup"}, function(err, all_pups) {
 
 
             photos.find({type: "kitten"}, function(err, all_kittens) {
-                // Find the current user
+                // find the current user
                 users.find({ip: req.ip}, function(err, u) {
 
                     var voted_on = [];
@@ -26,7 +26,7 @@ module.exports = function(app) {
                         voted_on = u[0].votes;
                     }
 
-                    // Find which photos the user hasn't still voted on
+                    // find which photos the user hasn't still voted on
 
                     var pups_not_voted_on = all_pups.filter(function(photo) {
                         return voted_on.indexOf(photo._id) == -1;
@@ -41,7 +41,7 @@ module.exports = function(app) {
 
 
                     if (pups_not_voted_on.length > 0) {
-                        // Choose a random image from the array
+                        // choose a random image from the unvoted pups array
                         pup = pups_not_voted_on[Math.floor(Math.random() * pups_not_voted_on.length)];
 
 
@@ -49,12 +49,13 @@ module.exports = function(app) {
 
 
                     if (kittens_not_voted_on.length > 0) {
-                        // Choose a random image from the array
+                        // choose a random image from the unvoted kittens array
                         kitten = kittens_not_voted_on[Math.floor(Math.random() * kittens_not_voted_on.length)];
 
 
                     }
 
+			//send the two pics to the home page
                     res.render('home', {photo1: pup, photo2: kitten});
 
                 });
@@ -67,13 +68,13 @@ module.exports = function(app) {
 
 
 
-    // Register the user in the database by ip address
+    // register the user in the database by ip address; doesnt work on heroku
     app.get('*', function(req, res, next) {
         users.insert({
             ip: req.ip,
             votes: []
         }, function() {
-            // Continue with the other routes
+            // pass to next middleware
             next();
         });
 
@@ -86,7 +87,7 @@ module.exports = function(app) {
 
 
 
-            // Render the standings template and pass the photos
+            // render the standings page and pass the photos
             res.render('standings', {standings: all_photos});
 
         });
@@ -147,7 +148,7 @@ module.exports = function(app) {
                             users.update({ip: req.ip}, {$addToSet: {votes: found_win[0]._id}}, function(err) {
                                 photos.find({name: loser}, function(err, found_los) {
                                     if (found_los.length == 1) {
-                                        //update lnew loser ratings
+                                        //update new loser ratings
                                         photos.update(found_los[0], {$set: {ratings: loserAdjustment}}, function(err) {
                                             //mark photo voted by user
                                             users.update({ip: req.ip}, {$addToSet: {votes: found_los[0]._id}}, function() {
